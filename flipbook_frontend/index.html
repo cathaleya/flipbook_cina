@@ -105,66 +105,70 @@
 <!-- Menggunakan StPageFlip library via CDN -->
 <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.min.js"></script>
 <script>
+    // TUGAS PENTING: Beritahu Streamlit bahwa komponen sudah siap (handshake)
+    function sendMessageToStreamlitClient(type, data) {
+        const outData = Object.assign({
+            isStreamlitMessage: true,
+            type: type,
+        }, data);
+        window.parent.postMessage(outData, "*");
+    }
+
+    // 1. Beritahu Streamlit komponen sudah ready SEGERA agar tidak loading terus
+    sendMessageToStreamlitClient("streamlit:componentReady", {apiVersion: 1});
+    // 2. Atur tinggi iframe awal
+    sendMessageToStreamlitClient("streamlit:setFrameHeight", {height: 800});
+
     document.addEventListener('DOMContentLoaded', function() {
-        const totalPages = 93;
-        const flipbookEl = document.getElementById('flipbook');
-        
-        let pagesHtml = '';
-        for (let i = 1; i <= totalPages; i++) {
-            pagesHtml += `<div class="page">
-                <img src="pages/page_${i}.jpg" alt="Page ${i}" loading="lazy">
-            </div>`;
-        }
-        flipbookEl.innerHTML = pagesHtml;
-        flipbookEl.style.display = 'block';
-
-        const pageFlip = new St.PageFlip(flipbookEl, {
-            width: 450, // Base width
-            height: 636, // Base height (A4/B5 proportion)
-            size: "stretch",
-            minWidth: 315,
-            maxWidth: 600,
-            minHeight: 445,
-            maxHeight: 850,
-            maxShadowOpacity: 0.3,
-            showCover: true,
-            mobileScrollSupport: false,
-            usePortrait: true // Memungkinkan tampilan 1 halaman di layar kecil
-        });
-
-        pageFlip.loadFromHTML(document.querySelectorAll('.page'));
-
-        document.getElementById('btn-prev').addEventListener('click', () => {
-            pageFlip.flipPrev();
-        });
-
-        document.getElementById('btn-next').addEventListener('click', () => {
-            pageFlip.flipNext();
-        });
-
-        pageFlip.on('flip', (e) => {
-            let current = e.data + 1;
-            if (pageFlip.getOrientation() === 'landscape' && current > 1 && current < totalPages) {
-                document.getElementById('current-page').textContent = `${current} - ${current + 1}`;
-            } else {
-                document.getElementById('current-page').textContent = current;
+        try {
+            const totalPages = 93;
+            const flipbookEl = document.getElementById('flipbook');
+            
+            let pagesHtml = '';
+            for (let i = 1; i <= totalPages; i++) {
+                pagesHtml += `<div class="page">
+                    <img src="pages/page_${i}.jpg" alt="Page ${i}" loading="lazy">
+                </div>`;
             }
-        });
+            flipbookEl.innerHTML = pagesHtml;
+            flipbookEl.style.display = 'block';
 
-        // TUGAS PENTING: Beritahu Streamlit bahwa komponen sudah siap (handshake)
-        // Jika ini tidak dikirim, Streamlit akan terus "mutar/loading" menunggu komponen siap.
-        function sendMessageToStreamlitClient(type, data) {
-            const outData = Object.assign({
-                isStreamlitMessage: true,
-                type: type,
-            }, data);
-            window.parent.postMessage(outData, "*");
+            const pageFlip = new St.PageFlip(flipbookEl, {
+                width: 450, // Base width
+                height: 636, // Base height (A4/B5 proportion)
+                size: "stretch",
+                minWidth: 315,
+                maxWidth: 600,
+                minHeight: 445,
+                maxHeight: 850,
+                maxShadowOpacity: 0.3,
+                showCover: true,
+                mobileScrollSupport: false,
+                usePortrait: true // Memungkinkan tampilan 1 halaman di layar kecil
+            });
+
+            pageFlip.loadFromHTML(document.querySelectorAll('.page'));
+
+            document.getElementById('btn-prev').addEventListener('click', () => {
+                pageFlip.flipPrev();
+            });
+
+            document.getElementById('btn-next').addEventListener('click', () => {
+                pageFlip.flipNext();
+            });
+
+            pageFlip.on('flip', (e) => {
+                let current = e.data + 1;
+                if (pageFlip.getOrientation() === 'landscape' && current > 1 && current < totalPages) {
+                    document.getElementById('current-page').textContent = `${current} - ${current + 1}`;
+                } else {
+                    document.getElementById('current-page').textContent = current;
+                }
+            });
+        } catch (error) {
+            console.error("Flipbook error:", error);
+            document.getElementById('flipbook').innerHTML = "<h3>Gagal memuat flipbook. Pastikan folder 'pages' berisi gambar halaman.</h3>";
         }
-
-        // 1. Beritahu Streamlit komponen sudah ready
-        sendMessageToStreamlitClient("streamlit:componentReady", {apiVersion: 1});
-        // 2. Atur tinggi iframe
-        sendMessageToStreamlitClient("streamlit:setFrameHeight", {height: 800});
     });
 </script>
 
