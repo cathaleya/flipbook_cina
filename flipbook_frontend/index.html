@@ -151,12 +151,20 @@
             }
         });
 
-        // Beritahu Streamlit untuk menyesuaikan tinggi iframe
-        window.parent.postMessage({
-            isStreamlitMessage: true,
-            type: "setFrameHeight",
-            height: 800
-        }, "*");
+        // TUGAS PENTING: Beritahu Streamlit bahwa komponen sudah siap (handshake)
+        // Jika ini tidak dikirim, Streamlit akan terus "mutar/loading" menunggu komponen siap.
+        function sendMessageToStreamlitClient(type, data) {
+            const outData = Object.assign({
+                isStreamlitMessage: true,
+                type: type,
+            }, data);
+            window.parent.postMessage(outData, "*");
+        }
+
+        // 1. Beritahu Streamlit komponen sudah ready
+        sendMessageToStreamlitClient("streamlit:componentReady", {apiVersion: 1});
+        // 2. Atur tinggi iframe
+        sendMessageToStreamlitClient("streamlit:setFrameHeight", {height: 800});
     });
 </script>
 
