@@ -89,8 +89,10 @@ local_css()
 # ==========================================
 # SESSION STATE INITIALIZATION
 # ==========================================
+# Initialize session state for pagination
 if "page" not in st.session_state:
-    st.session_state.page = "biodata"  # biodata, q_page_0..4, summary, finish
+    st.session_state.page = "biodata"  # biodata, baca_buku, q_page_0..4, summary, finish
+
 if "biodata" not in st.session_state:
     st.session_state.biodata = {}
 if "answers" not in st.session_state:
@@ -229,27 +231,43 @@ elif st.session_state.page == "baca_buku":
         </div>
     """, unsafe_allow_html=True)
     
-    import streamlit.components.v1 as components
     import os
     
-    # Render the native HTML flipbook component
-    flipbook_dir = os.path.join(os.path.dirname(__file__), "flipbook_frontend")
+    # Inisialisasi state halaman flipbook jika belum ada
+    if "flipbook_page" not in st.session_state:
+        st.session_state.flipbook_page = 1
+        
+    total_pages = 93
     
-    if os.path.exists(flipbook_dir):
-        # We declare the component pointing to the local folder
-        # Streamlit will serve the HTML and its relative assets (pages/ images)
-        flipbook_component = components.declare_component("native_flipbook", path=flipbook_dir)
-        flipbook_component(key="my_flipbook")
-    else:
-        st.error("Folder flipbook tidak ditemukan. Pastikan Anda sudah mengekstrak gambar.")
+    # Tombol navigasi flipbook
+    col_prev, col_info, col_next = st.columns([1, 2, 1])
+    with col_prev:
+        if st.button("⬅️ Halaman Sebelumnya", disabled=(st.session_state.flipbook_page == 1)):
+            st.session_state.flipbook_page -= 1
+            st.rerun()
+    with col_info:
+        st.markdown(f"<div style='text-align: center; padding: 10px; font-weight: bold; background-color: #fce4e4; border-radius: 5px; color: #be123c;'>Halaman {st.session_state.flipbook_page} dari {total_pages}</div>", unsafe_allow_html=True)
+    with col_next:
+        if st.button("Halaman Selanjutnya ➡️", disabled=(st.session_state.flipbook_page == total_pages)):
+            st.session_state.flipbook_page += 1
+            st.rerun()
             
-    st.markdown("<br>", unsafe_allow_html=True)
-    col_back, col_next = st.columns(2)
+    # Tampilkan gambar halaman saat ini
+    img_path = os.path.join(os.path.dirname(__file__), "flipbook_frontend", "pages", f"page_{st.session_state.flipbook_page}.jpg")
+    if os.path.exists(img_path):
+        st.image(img_path, use_container_width=True)
+    else:
+        st.error(f"Gambar halaman tidak ditemukan di: {img_path}. Pastikan folder 'flipbook_frontend/pages' ikut terupload.")
+            
+    st.markdown("<br><hr>", unsafe_allow_html=True)
+    
+    # Tombol Lanjut ke Instrumen
+    col_back, col_next_instrumen = st.columns(2)
     with col_back:
         if st.button("⬅ Edit Biodata"):
             st.session_state.page = "biodata"
             st.rerun()
-    with col_next:
+    with col_next_instrumen:
         if st.button("Lanjutkan ke Instrumen ➡️"):
             st.session_state.page = "q_page_0"
             st.rerun()
